@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attacker Demo Client</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #00ff00;
+            font-family: 'Fira Code', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #33ff33;
+            border-radius: 8px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            position: relative;
+        }
+
+        .container::before {
+            content: "IoT Device Login (v1.2)";
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background-color: #0d0d0d;
+            padding: 0 10px;
+            font-size: 0.9rem;
+            color: #33ff33;
+        }
+
+        .terminal-header {
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #33ff33;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Fira Code', monospace;
+            box-sizing: border-box;
+        }
+        
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #33ff33;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+        }
+
+        .status {
+            margin-top: 15px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .error {
+            color: #ff3333;
+        }
+        
+        .success {
+            color: #33ff33;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="terminal-header">
+            <p>Welcome to Advanced IoT Hub.</p>
+            <p>Please enter your credentials.</p>
+        </div>
+
+        <form id="attackForm">
+            <div class="form-group">
+                <label for="username">root@device:~# username</label>
+                <input type="text" id="username" value="admin" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">root@device:~# password</label>
+                <input type="password" id="password" value="123456" required>
+            </div>
+
+            <button type="submit">CONNECT / EXPLOIT</button>
+        </form>
+
+        <div class="status" id="statusMessage"></div>
+    </div>
+
+    <script>
+        document.getElementById('attackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const statusDiv = document.getElementById('statusMessage');
+            
+            statusDiv.textContent = 'Attempting connection...';
+            statusDiv.className = 'status';
+
+            try {
+                // Determine caller IP by fetching from a public IP API.
+                // In a real scenario, this would just hit the backend and the backend logs the IP.
+                // Since this is a demo to hit our backend directly, we will simulate the attacker.
+                
+                const response = await fetch('http://localhost:3000/api/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ip: '192.168.1.' + Math.floor(Math.random() * 255), // Simulate random attacker IPs for demo purposes
+                        protocol: 'HTTP',
+                        username: user,
+                        password: pass
+                    })
+                });
+
+                if (response.ok) {
+                    // It's a honeypot, so even if the request was successful in logging the attack,
+                    // we show an 'Authentication Failed' error to the 'attacker'.
+                    statusDiv.textContent = 'ERROR 401: Unauthorized access.';
+                    statusDiv.className = 'status error';
+                } else {
+                    statusDiv.textContent = 'Connection Refused.';
+                    statusDiv.className = 'status error';
+                }
+                
+                // Clear the password field to encourage another attempt
+                document.getElementById('password').value = '';
+                
+            } catch (error) {
+                statusDiv.textContent = 'Server Unreachable. Is Backend Running?';
+                statusDiv.className = 'status error';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WLAN IoT Honeypot Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- New CDNs for Features 12 (Vis Graph) & 14 (PDF) -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="dashboard-container glass" id="dashboardReportContainer">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>IoT Honeypot Analytics</h1>
+                    <p>Real-time detection of default credential attacks on WLAN</p>
+                </div>
+                <div class="action-bar" style="display:flex; gap:10px; align-items:center;">
+                    <button onclick="downloadPDF()" class="btn btn-pdf">📄 Download PDF</button>
+                    <button onclick="exportCSV()" class="btn btn-csv">📊 Export CSV</button>
+                </div>
+            </div>
+            
+            <div class="timeline-filter" style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                <label for="timeRange">Filter Timeline: </label>
+                <input type="range" id="timeRange" min="1" max="24" value="24" style="flex: 1;" oninput="document.getElementById('timeLabel').innerText = this.value + ' hours ago'; updateDashboardFromCache();">
+                <span id="timeLabel" style="min-width: 100px;">24 hours ago</span>
+            </div>
+        </header>
+        
+        <div class="stats-row">
+            <div class="stat-card glass-inner">
+                <h3>Total Attacks</h3>
+                <h2 id="totalAttacks">0</h2>
+            </div>
+            <div class="stat-card glass-inner ml-card">
+                <h3>TF.js Botnet Threat</h3>
+                <h2 id="botnetScore" style="color: var(--accent-red)">0%</h2>
+            </div>
+            <div class="stat-card glass-inner ml-card">
+                <h3>LSTM Prediction (Next Cred)</h3>
+                <h2 id="lstmPredict" style="font-size: 1.5rem;">Loading...</h2>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-container glass-inner" style="grid-column: 1 / -1; display:flex; gap: 20px;">
+                <div style="flex:1;">
+                    <h3>Live Threat Geolocation</h3>
+                    <div id="map" style="height: 350px; border-radius: 12px; z-index: 1;"></div>
+                </div>
+                <div style="flex:1;">
+                    <h3>IP Network Graph (ESP32 Connections)</h3>
+                    <div id="mynetwork" style="height: 350px; border-radius: 12px; background: rgba(0,0,0,0.2);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-container glass-inner">
+                <h3>Top Used Credentials</h3>
+                <canvas id="credentialsChart"></canvas>
+            </div>
+            <div class="chart-container glass-inner">
+                <h3>Predictive Attack Volume Forecasting</h3>
+                <canvas id="forecastChart"></canvas>
+            </div>
+            <div class="chart-container glass-inner">
+                <h3>K-Means Threat Groups</h3>
+                <div id="clustersList" style="margin-top: 1rem; max-height: 250px; overflow-y: auto;">
+                    <!-- Clusters go here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-row" style="margin-top: 1.5rem;">
+            <div class="logs-container glass-inner" style="flex: 2; overflow: hidden; display: flex; flex-direction: column;">
+                <h3>Recent Attack Logs</h3>
+                <div class="table-wrapper" style="overflow-y: auto; max-height: 400px;">
+                    <table id="logsTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Attacker IP</th>
+                                <th>Target Node</th>
+                                <th>Protocol</th>
+                                <th>Credentials Attempted</th>
+                                <th>ML Analysis</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamically filled -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="glass-inner" style="flex: 1; background: #000; border: 1px solid #0f0; display: flex; flex-direction: column; overflow: hidden;">
+                <h3 style="color: #0f0; font-family: monospace; border-bottom: 1px dashed #0f0; padding-bottom: 5px; margin-bottom: 10px; font-size: 0.9rem;">> RAW_HONEYPOT_STREAM_v2.0</h3>
+                <div id="matrixTerminal" style="color: #0f0; font-family: 'Fira Code', 'Courier New', monospace; font-size: 0.75rem; line-height: 1.3; overflow-y: auto; max-height: 360px; text-shadow: 0 0 5px #0f0;">
+                    <!-- Raw stream filled by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js?v=2"></script>
+</body>
+</html>
